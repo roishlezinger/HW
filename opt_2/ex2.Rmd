@@ -1,0 +1,188 @@
+---
+title: "ex1"
+output:
+  pdf_document: default
+  html_document: default
+---
+##id:30788595-4
+
+# Q1
+```{r}
+gr <- (sqrt(5)+1)/2
+golden_ratio<- function(alpha_init,an, tol ,a,b, step = F)
+{
+  c <- b - (b - a) / gr
+  d <- a + (b - a) / gr
+  while (abs(b-a)>tol) {
+     if (step) {
+      print(c)
+    }
+    if (alpha_init(c,an) < alpha_init(d,an)) {
+      b <- d
+    } else{
+      a <- c
+    }
+    c <- b - (b - a) / gr
+    d <- a + (b - a) / gr
+  }
+  return((b + a) / 2)
+}
+
+func <- function(x,y){100*((y-(x^2))^2) + ((1-x)^2)}
+a0 = c(3,5)
+tol = 1e-09
+maxiter = 1000
+
+gradient  <- function(x,y){
+  dx <- -400*y*x + 400*x^3 -2 +2*x
+  dy <- 200*(y-x^2)
+  return(as.matrix(c(dx,dy)))
+}
+grad <- function(x,y){c(((-400*x)*(y-(x^2))-2*(1-x)),
+                          200*(y-(x^2)))}
+alpha_init <- function(alpha,an_1){func(an_1[1]-alpha*(grad(an_1[1],an_1[2])[1]),an_1[2]-alpha*(grad(an_1[1],an_1[2])[2]))}
+
+
+
+
+sdescent <- function( a0, tol, maxiter){
+  ##############################################
+  #steepest descent algorithm (gradient method)#
+  ##############################################
+  #input:
+    #a0: initial point (an array two elements)
+    #tol: tolerance the norm of the difference between current and previous iterates
+    #maxiter: maximum number of iterations.
+  #output:
+    #a: solution (array of x and y)
+    #num: number of iterations.
+  
+  
+  
+  result <- list(c(a0,0))
+  i <- 1
+  flag <- TRUE
+  an_1 <- as.matrix(a0)
+  while (i<= maxiter & flag) {
+    x <- an_1[1]
+    y <- an_1[2]
+    gamma <- golden_ratio(alpha_init = alpha_init,an_1,tol = 0.00001,a = 0,b = 20,step = F)
+    an <-  as.matrix(an_1) - as.matrix(gamma*gradient(x,y))
+    an <- as.array(an)
+    i <- i + 1
+    result[[i]] <- c(an,func(an[1],an[2]))
+    #print(c(an,'%',gamma,gamma_f))
+    if (abs(sum(an-an_1))<tol){
+      flag <- FALSE
+  }
+    an_1 <- an
+  }
+return(result)
+}
+
+
+
+point_start <- array(c(10,5))
+
+result <- sdescent(a0 = point_start,tol =  1e-09,maxiter = 1000)
+
+```
+
+## q1.2
+```{r}
+result <- data.frame(matrix(unlist(result), nrow=length(result), byrow=T))
+colnames(result) <- c('x','y','z')
+
+x <- seq(-99,99,length=100)
+y <- x
+
+
+z <- outer(x,y,func)
+
+par(mar=c(1,1,1,1))
+res <- persp(x,y,z,theta=30,phi=20,expand=0.3,ltheta=100)
+mypoints <- trans3d(result$x, result$y, result$z, pmat=res)
+points(mypoints, pch=1, col="red",lwd=4)
+
+
+```
+## Q1.3
+The algorithm is very slow. It takes 483 iterations according to the parameters entered above.The steepest descent method zig-zags along the bottom of the valley, make it that inefficient. It is my understanding that any function with a curved, flat valley leading to the global minimum will present similar difficulties for steepest descent.
+
+In addition the algorithm is inefficient because it forces us to produce an algorithm to look for the alpha. This is both slow and cumbersome in code writing
+
+# Q2
+## 2.1
+```{r}
+func <- function(x,y)
+{
+    return(100*(y-x^2)^2+(1-x)^2)
+}
+
+gradient  <- function(x,y){
+  dx <- -400*y*x + 400*x^3 -2 +2*x
+  dy <- 200*(y-x^2)
+  return(as.matrix(c(dx,dy)))
+}
+
+hessian  <- function(x,y) {
+  dxx <- 1200*x^2 -400*y + 2
+  dxy <- -400*x
+  dyy <- 200
+  temp <- matrix(c(dxx,dxy,dxy,dyy),nrow = 2)
+  return(temp)
+}
+
+newton = function( a0, tol, maxiter){
+  #########################
+  #Newton method algorithm#
+  #########################
+  #input:
+    #a0: initial point (an array two elements)
+    #tol: tolerance the norm of the difference between current and previous iterates
+    #maxiter: maximum number of iterations.
+  #output:
+    #a: solution (array of x and y)
+    #num: number of iterations.
+  result <- data.frame(x=rep(NA,maxiter),y=rep(NA,maxiter),z=rep(NA,maxiter))
+  i <- 1
+  flag <- TRUE
+  an_1 <- as.matrix(a0)
+  while (i<= maxiter & flag) {
+    x <- an_1[1]
+    y <- an_1[2]
+    an <-  as.matrix(an_1) - solve(hessian(x,y))%*%gradient(x,y)
+    an <- as.array(an)
+    result[i,1] <- an[1]
+    result[i,2] <- an[2]
+    result[i,3] <- func(x,y)
+    i <- i+1
+    if (abs(sum(an-an_1))<tol){
+      flag <- FALSE
+  }
+    an_1 <- an
+  }
+  result <- result[complete.cases(result), ]
+  return(result)
+}
+
+result <- newton(a0 = c(30,100),tol = 0.001,maxiter = 20)
+
+```
+## 2.2
+```{r}
+x <- seq(-99,99,length=100)
+y <- x
+
+
+z <- outer(x,y,func)
+
+par(mar=c(1,1,1,1))
+res <- persp(x,y,z,theta=30,phi=20,expand=0.3,ltheta=100)
+mypoints <- trans3d(result$x, result$y, result$z, pmat=res)
+points(mypoints, pch=1, col="red",lwd=4)
+
+```
+## 2.3
+Compared to Gradient descent, a very efficient algorithm. Manages to aim for the global minimum quickly.
+The alleged algorithm requires higher computer resources, since we calculate the second derivative, but in our example, this does not seem to be a problem at all
