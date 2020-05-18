@@ -38,9 +38,8 @@ gradient  <- function(x,y){
   dy <- 200*(y-x^2)
   return(as.matrix(c(dx,dy)))
 }
-grad <- function(x,y){c(((-400*x)*(y-(x^2))-2*(1-x)),
-                          200*(y-(x^2)))}
-alpha_init <- function(alpha,an_1){func(an_1[1]-alpha*(grad(an_1[1],an_1[2])[1]),an_1[2]-alpha*(grad(an_1[1],an_1[2])[2]))}
+
+alpha_init <- function(alpha,an_1){func(an_1[1]-alpha*(gradient(an_1[1],an_1[2])[1]),an_1[2]-alpha*(gradient(an_1[1],an_1[2])[2]))}
 
 
 
