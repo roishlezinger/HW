@@ -1,0 +1,43 @@
+
+## problem 1
+```{r}
+
+yk <- function(s,epsilon,k){
+  y <- exp(-k/(10^5))*max(0,10-s*(1+0.007*epsilon))
+  return(y)
+}
+
+
+
+last_layer <- function(k,s){
+  result <- array(data = NA,dim = (k+1)*2)
+  for (i in seq(-k,k+1,2)) {
+    result[i+k+1] <- yk(s,i,k)
+  }
+  return(result)
+}
+
+
+prev_layer <- function(layer,s) {
+  k <- length(layer)/2 -1
+  cur_layer <- array(data = NA,dim = k*2)
+    for (i in seq(-k+1,k,2)) {
+      cur_layer[i+k] <- max(yk(s,i,k-1), 0.5*(layer[k+i]+layer[k+i+2])) 
+  }
+  return(cur_layer)
+}
+
+vmxs1  <- function(s,k = 10000) {
+  cur <- last_layer(k = k,s = s)
+  for (i in (k):1) {
+    prev <- prev_layer(cur,s)
+    cur <- prev
+  
+  }
+  return(cur[1])
+}
+
+  
+```
+
+
